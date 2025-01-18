@@ -20,6 +20,6 @@ python app/app.py
 To make a prediction using the application, you can use the following `curl` command. Replace `test/try.png` with the path to your image file:
 
 ```
-curl -X POST -F "file=@test.jpg" http://localhost:10000/predict/pneumonia
+curl -X POST -F "file=@test.jpeg" http://localhost:10000/predict/pneumonia
 
 ```
