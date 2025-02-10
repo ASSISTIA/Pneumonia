@@ -8,10 +8,10 @@ import numpy as np
 app = Flask(__name__)
 
 # Load the trained model
-model = load_model('./Model/pneumonia.h5')  # Load pneumonia model
+model = load_model('./model/pneumonia.h5')
 
 # Define the class labels 
-class_labels = ["Normal", "Pneumonia"] # Assuming binary classification
+class_labels = ["Normal", "Pneumonia"]
 
 # Ensure the 'uploads' directory exists
 if not os.path.exists('uploads'):
@@ -19,7 +19,8 @@ if not os.path.exists('uploads'):
 
 # Function to preprocess the image
 def preprocess_image(img_path):
-    img = image.load_img(img_path, target_size=(200, 200)) # Input size used during training
+    # Changed to 200x200 to match the model's expected input
+    img = image.load_img(img_path, target_size=(200, 200))
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array = img_array / 255.0
@@ -27,25 +28,40 @@ def preprocess_image(img_path):
 
 @app.route('/', methods=['GET'])
 def working():
-    return "Pneumonia API is active"
+    return "Pneumonia Detection API is active"
 
-# API endpoint to receive image and return prediction
-@app.route('/predict/pneumonia', methods=['POST']) # Changed endpoint
+@app.route('/predict/pneumonia', methods=['POST'])
 def predict():
     if 'file' not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
+
     file = request.files['file']
+    
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
+
     if file:
         file_path = os.path.join('uploads', file.filename)
         file.save(file_path)
-        img_array = preprocess_image(file_path)
-        predictions = model.predict(img_array)
-        predicted_class = np.round(predictions[0][0]) # Round for binary classification
-        predicted_label = class_labels[int(predicted_class)] # Convert to int for indexing
-        os.remove(file_path)
-        return jsonify({"prediction": predicted_label})
+
+        try:
+            img_array = preprocess_image(file_path)
+            predictions = model.predict(img_array)
+            # For binary classification, use round instead of argmax
+            predicted_class = int(np.round(predictions[0][0]))
+            predicted_label = class_labels[predicted_class]
+
+            os.remove(file_path)
+            return jsonify({
+                "prediction": predicted_label,
+                "confidence": float(predictions[0][0])
+            })
+
+        except Exception as e:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return jsonify({"error": str(e)}), 500
+
     return jsonify({"error": "Something went wrong"}), 500
 
 if __name__ == '__main__':
