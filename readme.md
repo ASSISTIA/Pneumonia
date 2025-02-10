@@ -11,7 +11,7 @@ pip install Flask tensorflow numpy
 Once the required packages are installed, you can run the application with the following command:
 
 ```
-python app/app.py
+python app.py
 ```
 
 ### Making a Prediction
@@ -20,6 +20,6 @@ python app/app.py
 To make a prediction using the application, you can use the following `curl` command. Replace `test/try.png` with the path to your image file:
 
 ```
-curl -X POST -F "file=@test.jpeg" http://localhost:10000/predict/pneumonia
+curl -X POST -F "file=@test2.jpeg" http://127.0.0.1:10000/predict/pneumonia
 
 ```
